@@ -1,30 +1,42 @@
 package sorokin.java.course.account;
 
+import jakarta.persistence.*;
+import sorokin.java.course.user.User;
+
+@Entity
+@Table(name = "accounts")
 public class Account {
 
-    private final int id;
-    private final int userId;
-    private int moneyAmount;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public Account(int id, int userId, int moneyAmount) {
-        this.id = id;
-        this.userId = userId;
+    @Column(name = "money_amount")
+    private Long moneyAmount;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User userId;
+
+    public Account() {}
+
+    public Account(Long moneyAmount) {
         this.moneyAmount = moneyAmount;
     }
 
-    public int getId() {
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public int getUserId() {
-        return userId;
-    }
-
-    public int getMoneyAmount() {
+    public Long getMoneyAmount() {
         return moneyAmount;
     }
 
-    public void setMoneyAmount(int moneyAmount) {
+    public void setMoneyAmount(Long moneyAmount) {
         if (moneyAmount < 0) {
             throw new IllegalArgumentException("Attempted to set moneyAmount less than 0");
         }
@@ -35,7 +47,6 @@ public class Account {
     public String toString() {
         return "Account{" +
                 "id=" + id +
-                ", userId=" + userId +
                 ", moneyAmount=" + moneyAmount +
                 '}';
     }
