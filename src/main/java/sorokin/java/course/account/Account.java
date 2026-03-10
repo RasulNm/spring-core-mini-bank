@@ -16,7 +16,7 @@ public class Account {
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User userId;
+    private User user;
 
     public Account() {}
 
@@ -41,6 +41,14 @@ public class Account {
             throw new IllegalArgumentException("Attempted to set moneyAmount less than 0");
         }
         this.moneyAmount = moneyAmount;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     @Override

@@ -1,7 +1,10 @@
 package sorokin.java.course.user;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Component;
 import sorokin.java.course.account.AccountService;
+import sorokin.java.course.transaction.TransactionHelper;
 import sorokin.java.course.user.User;
 
 import java.util.*;
@@ -9,14 +12,18 @@ import java.util.*;
 @Component
 public class UserService {
 
-    private int idCounter;
-    private final Map<Integer, User> userMap;
     private final Set<String> takenLogins;
     private final AccountService accountService;
+    private final TransactionHelper transactionHelper;
+    private final SessionFactory sessionFactory;
 
-    public UserService(AccountService accountService) {
-        this.idCounter = 0;
-        this.userMap = new HashMap<>();
+    public UserService(
+            AccountService accountService,
+            TransactionHelper transactionHelper,
+            SessionFactory sessionFactory
+    ) {
+        this.transactionHelper = transactionHelper;
+        this.sessionFactory = sessionFactory;
         this.takenLogins = new HashSet<>();
         this.accountService = accountService;
     }
@@ -26,13 +33,11 @@ public class UserService {
         if (takenLogins.contains(normalizedLogin)) {
             throw new IllegalArgumentException("User already exists with login=%s".formatted(normalizedLogin));
         }
-
-        idCounter++;
-        var user = new User(idCounter, normalizedLogin, new ArrayList<>());
+        var user = new User(normalizedLogin, new ArrayList<>());
+        transactionHelper.executeInTransaction(session -> {
+            session.persist(user);
+        });
         var defaultAccount = accountService.createAccount(user);
-        user.getAccountList().add(defaultAccount);
-
-        userMap.put(idCounter, user);
         takenLogins.add(normalizedLogin);
         return user;
     }
@@ -41,15 +46,26 @@ public class UserService {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("user id must be > 0");
         }
-        var user = userMap.get(id);
-        if (user == null) {
-            throw new IllegalArgumentException("No such user with id=%s".formatted(id));
-        }
-        return user;
+        return transactionHelper.executeInTransaction(session -> {
+            User user = session.get(User.class, id);
+            if (user == null) {
+                throw new IllegalArgumentException("No such user with id=%s".formatted(id));
+            }
+            return user;
+        });
     }
 
     public List<User> findAll() {
-        return userMap.values().stream().toList();
+        try (Session session = sessionFactory.openSession()) {
+            return session
+                    .createQuery("""
+                                    SELECT u FROM User u
+                                    LEFT JOIN FETCH u.accountList a
+                                    """,
+                            User.class
+                    )
+                    .list();
+        }
     }
 
     private String validateLogin(String login) {

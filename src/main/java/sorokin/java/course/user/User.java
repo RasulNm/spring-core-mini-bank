@@ -16,13 +16,14 @@ public class User {
     @Column(name = "user_login", nullable = false, unique = true)
     private String login;
 
-    @OneToMany(mappedBy = "userId")
+    @OneToMany(mappedBy = "user")
     private List<Account> accountList;
 
     public User() {}
 
-    public User(String login) {
+    public User(String login, List<Account> accountList) {
         this.login = login;
+        this.accountList = accountList;
     }
 
     public void setId(Long id) {
