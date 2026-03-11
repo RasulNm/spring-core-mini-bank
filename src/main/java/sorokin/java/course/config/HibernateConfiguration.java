@@ -40,7 +40,8 @@ public class HibernateConfiguration {
                 .setProperty("hibernate.dialect", dbProperties.getDialect())
                 .setProperty("hibernate.show_sql", String.valueOf(hibernateProperties.isShowSql()))
                 .setProperty("hibernate.format_sql", String.valueOf(hibernateProperties.isFormatSql()))
-                .setProperty("hibernate.hbm2ddl.auto", hibernateProperties.getAuto());
+                .setProperty("hibernate.hbm2ddl.auto", hibernateProperties.getAuto())
+                .setProperty("hibernate.current_session_context_class", hibernateProperties.getSessionContextClass());
 
         return config.buildSessionFactory();
     }
