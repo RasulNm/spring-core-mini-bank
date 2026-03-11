@@ -12,7 +12,6 @@ import java.util.*;
 @Component
 public class UserService {
 
-    private final Set<String> takenLogins;
     private final AccountService accountService;
     private final TransactionHelper transactionHelper;
     private final SessionFactory sessionFactory;
@@ -24,21 +23,29 @@ public class UserService {
     ) {
         this.transactionHelper = transactionHelper;
         this.sessionFactory = sessionFactory;
-        this.takenLogins = new HashSet<>();
         this.accountService = accountService;
     }
 
     public User createUser(String login) {
         String normalizedLogin = validateLogin(login);
-        if (takenLogins.contains(normalizedLogin)) {
-            throw new IllegalArgumentException("User already exists with login=%s".formatted(normalizedLogin));
+        try (Session session = sessionFactory.openSession()) {
+            String log = session.createNativeQuery("""
+                                    SELECT u.user_login
+                                    FROM users u
+                                    WHERE u.user_login = :login
+                                    """,
+                            String.class)
+                    .setParameter("login", normalizedLogin)
+                    .getSingleResultOrNull();
+            if (normalizedLogin.equals(log)) {
+                throw new IllegalArgumentException("User already exists with login=%s".formatted(normalizedLogin));
+            }
         }
         var user = new User(normalizedLogin, new ArrayList<>());
         transactionHelper.executeInTransaction(session -> {
             session.persist(user);
         });
-        var defaultAccount = accountService.createAccount(user);
-        takenLogins.add(normalizedLogin);
+        accountService.createAccount(user);
         return user;
     }
 

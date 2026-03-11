@@ -18,10 +18,12 @@ public class TransactionHelper {
     }
 
     public void executeInTransaction(Consumer<Session> action) {
-        Transaction transaction = null;
-        try(Session session = sessionFactory.openSession()) {
-            transaction = session.getTransaction();
-            transaction.begin();
+        Session session = sessionFactory.getCurrentSession();
+        Transaction transaction = session.getTransaction();
+        try {
+            if(!transaction.isActive()) {
+                transaction.begin();
+            }
 
             action.accept(session);
 
@@ -35,10 +37,12 @@ public class TransactionHelper {
     }
 
     public <T> T executeInTransaction(Function<Session, T> action) {
-        Transaction transaction = null;
-        try(Session session = sessionFactory.openSession()) {
-            transaction = session.getTransaction();
-            transaction.begin();
+        Session session = sessionFactory.getCurrentSession();
+        Transaction transaction = session.getTransaction();
+        try {
+            if(!transaction.isActive()) {
+                transaction.begin();
+            }
 
             var result = action.apply(session);
 
