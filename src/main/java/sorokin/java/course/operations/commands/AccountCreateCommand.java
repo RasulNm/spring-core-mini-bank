@@ -15,7 +15,11 @@ public class AccountCreateCommand implements OperationCommand {
     private final UserService userService;
     private final ConsoleInput consoleInput;
 
-    public AccountCreateCommand(AccountService accountService, UserService userService, ConsoleInput consoleInput) {
+    public AccountCreateCommand(
+            AccountService accountService,
+            UserService userService,
+            ConsoleInput consoleInput
+    ) {
         this.accountService = accountService;
         this.userService = userService;
         this.consoleInput = consoleInput;
@@ -26,7 +30,6 @@ public class AccountCreateCommand implements OperationCommand {
         int userId = consoleInput.readPositiveInt("Enter user id:", "user id");
         var user = userService.findUserById(userId);
         Account account = accountService.createAccount(user);
-        user.getAccountList().add(account);
         System.out.println("Account created: " + account);
     }
 

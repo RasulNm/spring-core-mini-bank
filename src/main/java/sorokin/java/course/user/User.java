@@ -1,26 +1,45 @@
 package sorokin.java.course.user;
 
-import java.util.List;
+import jakarta.persistence.*;
 
+import java.util.List;
 import sorokin.java.course.account.Account;
 
+@Entity
+@Table(name = "users")
 public class User {
-    private final int id;
-    private final String login;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_login", nullable = false, unique = true)
+    private String login;
+
+    @OneToMany(mappedBy = "user")
     private List<Account> accountList;
 
-    public User(int id, String login, List<Account> accountList) {
-        this.id = id;
+    public User() {}
+
+    public User(String login, List<Account> accountList) {
         this.login = login;
         this.accountList = accountList;
     }
 
-    public int getId() {
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
         return id;
     }
 
     public String getLogin() {
         return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
     }
 
     public List<Account> getAccountList() {
